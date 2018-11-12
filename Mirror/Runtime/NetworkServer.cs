@@ -1254,5 +1254,54 @@ namespace Mirror
             }
             return true;
         }
+
+
+        #region External Connection Functions
+        static HashSet<int> s_ExternalConnections = new HashSet<int>();
+
+        static public bool AddExternalConnection(NetworkConnection conn) {
+            return AddExternalConnectionInternal(conn);
+        }
+
+        static bool AddExternalConnectionInternal(NetworkConnection conn) {
+            if (conn.connectionId < 0)
+                return false;
+
+            if (conn.connectionId < connections.Count && connections[conn.connectionId] != null) {
+                if (LogFilter.Debug) { Debug.LogError("AddExternalConnection failed, already connection for id:" + conn.connectionId); }
+                return false;
+            }
+
+            if (LogFilter.Debug) { Debug.Log("AddExternalConnection external connection " + conn.connectionId); }
+            AddConnection(conn);
+            s_ExternalConnections.Add(conn.connectionId);
+            conn.InvokeHandlerNoData((short)MsgType.Connect);
+
+            return true;
+        }
+
+        static public void RemoveExternalConnection(int connectionId) {
+            RemoveExternalConnectionInternal(connectionId);
+        }
+
+        static bool RemoveExternalConnectionInternal(int connectionId) {
+            if (!s_ExternalConnections.Contains(connectionId)) {
+                if (LogFilter.Debug) { Debug.LogError("RemoveExternalConnection failed, no connection for id:" + connectionId); }
+                return false;
+            }
+            if (LogFilter.Debug) { Debug.Log("RemoveExternalConnection external connection " + connectionId); }
+
+            s_ExternalConnections.Remove(connectionId);
+
+            NetworkConnection conn;
+            s_Connections.TryGetValue(connectionId, out conn);
+            if (conn != null) {
+                conn.RemoveObservers();
+            }
+            s_Connections.Remove(conn.connectionId);
+
+            return true;
+        }
+        #endregion
     }
 }
