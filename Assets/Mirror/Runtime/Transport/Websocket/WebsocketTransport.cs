@@ -10,7 +10,9 @@ namespace Mirror.Websocket
         protected Server server = new Server();
 
         public int port;
-
+        public override void SetPort(int value) {
+            throw new NotImplementedException();
+        }
         [Tooltip("Nagle Algorithm can be disabled by enabling NoDelay")]
         public bool NoDelay = true;
 

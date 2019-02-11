@@ -9,7 +9,9 @@ namespace Mirror
     public class MultiplexTransport : Transport
     {
         public Transport[] transports;
-
+        public override void SetPort(int value) {
+            throw new NotImplementedException();
+        }
         public void Awake()
         {
             if (transports == null || transports.Length == 0)

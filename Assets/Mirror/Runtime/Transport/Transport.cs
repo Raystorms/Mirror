@@ -15,6 +15,8 @@ namespace Mirror
 
     public abstract class Transport : MonoBehaviour
     {
+        public abstract void SetPort(int value);
+
         // client
         [HideInInspector] public UnityEvent OnClientConnected;
         [HideInInspector] public UnityEventByteArray OnClientDataReceived;

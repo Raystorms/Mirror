@@ -32,6 +32,8 @@ namespace Mirror
         [Scene]
         [FormerlySerializedAs("m_OnlineScene")] public string onlineScene = "";
 
+        public bool instantlyChangeScene = true;
+
         [Header("Network Info")]
         // transport layer
         public Transport transport;
@@ -403,6 +405,12 @@ namespace Mirror
             }
         }
 
+        public void ApplyChangeScene() {
+            if (NetworkServer.active)
+                return;
+            ClientChangeScene(networkSceneName, true);
+        }
+
         internal void ClientChangeScene(string newSceneName, bool forceReload)
         {
             if (string.IsNullOrEmpty(newSceneName))
@@ -608,7 +616,7 @@ namespace Mirror
             if (LogFilter.Debug) { Debug.Log("NetworkManager:OnClientConnectInternal"); }
 
             string loadedSceneName = SceneManager.GetSceneAt(0).name;
-            if (string.IsNullOrEmpty(onlineScene) || onlineScene == offlineScene || loadedSceneName == onlineScene)
+            if ((string.IsNullOrEmpty(onlineScene) || onlineScene == offlineScene || loadedSceneName == onlineScene) && instantlyChangeScene)
             {
                 clientLoadedScene = false;
                 OnClientConnect(netMsg.conn);
@@ -617,6 +625,7 @@ namespace Mirror
             {
                 // will wait for scene id to come from the server.
                 s_ClientReadyConnection = netMsg.conn;
+                OnClientConnect(netMsg.conn);
             }
         }
 
@@ -651,9 +660,11 @@ namespace Mirror
 
             string newSceneName = netMsg.reader.ReadString();
 
-            if (IsClientConnected() && !NetworkServer.active)
-            {
+            if (IsClientConnected() && !NetworkServer.active && instantlyChangeScene) {
                 ClientChangeScene(newSceneName, true);
+            } else {
+                networkSceneName = newSceneName;
+                NetworkManager.singleton.transport.enabled = false; //Pause message handling
             }
         }
 
@@ -807,7 +818,7 @@ namespace Mirror
         /// <param name="conn">Connection to the server.</param>
         public virtual void OnClientConnect(NetworkConnection conn)
         {
-            if (!clientLoadedScene)
+            if (!clientLoadedScene && instantlyChangeScene)
             {
                 // Ready/AddPlayer is usually triggered by a scene load completing. if no scene was loaded, then Ready/AddPlayer it here instead.
                 ClientScene.Ready(conn);
