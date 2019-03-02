@@ -58,9 +58,9 @@ namespace Mirror
         ///<summary>The client that has authority for this object. This will be null if no client has authority.</summary>
         public NetworkConnection clientAuthorityOwner { get; private set; }
         ///<summary>The NetworkConnection associated with this NetworkIdentity. This is only valid for player objects on a local client.</summary>
-        public NetworkConnection connectionToServer { get; private set; }
+        public NetworkConnection connectionToServer { get; internal set; }
         ///<summary>The NetworkConnection associated with this NetworkIdentity. This is only valid for player objects on the server.</summary>
-        public NetworkConnection connectionToClient { get; private set; }
+        public NetworkConnection connectionToClient { get; internal set; }
 
         // all spawned NetworkIdentities by netId. needed on server and client.
         public static Dictionary<uint, NetworkIdentity> spawned = new Dictionary<uint, NetworkIdentity>();
@@ -459,8 +459,8 @@ namespace Mirror
         // -> returns serialized data of everything dirty,  null if nothing was dirty
         internal byte[] OnSerializeAllSafely(bool initialState)
         {
-            // reset cached writer's position
-            onSerializeWriter.Reset();
+            // reset cached writer length and position
+            onSerializeWriter.SetLength(0);
 
             if (m_NetworkBehaviours.Length > 64)
             {
@@ -654,16 +654,6 @@ namespace Mirror
                     comp.OnStartAuthority();
                 }
             }
-        }
-
-        internal void SetConnectionToServer(NetworkConnection conn)
-        {
-            connectionToServer = conn;
-        }
-
-        internal void SetConnectionToClient(NetworkConnection conn)
-        {
-            connectionToClient = conn;
         }
 
         internal void OnNetworkDestroy()
@@ -939,14 +929,6 @@ namespace Mirror
                 varsMessage.payload = payload;
                 NetworkServer.SendToReady(this, (short)MsgType.UpdateVars, varsMessage);
             }
-        }
-
-        // this is invoked by the UnityEngine
-        public static void UNetStaticUpdate()
-        {
-            NetworkServer.Update();
-            NetworkClient.UpdateClients();
-            NetworkManager.UpdateScene();
         }
     }
 }

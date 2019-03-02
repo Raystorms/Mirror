@@ -143,7 +143,9 @@ namespace Mirror
             // call it while the NetworkManager exists.
             // -> we don't only call while Client/Server.Connected, because then we would stop if disconnected and the
             //    NetworkClient wouldn't receive the last Disconnect event, result in all kinds of issues
-            NetworkIdentity.UNetStaticUpdate();
+            NetworkServer.Update();
+            NetworkClient.UpdateClient();
+            UpdateScene();
         }
 
         // When pressing Stop in the Editor, Unity keeps threads alive until we
@@ -192,7 +194,6 @@ namespace Mirror
             NetworkServer.RegisterHandler(MsgType.Ready, OnServerReadyMessageInternal);
             NetworkServer.RegisterHandler(MsgType.AddPlayer, OnServerAddPlayerMessageInternal);
             NetworkServer.RegisterHandler(MsgType.RemovePlayer, OnServerRemovePlayerMessageInternal);
-            NetworkServer.RegisterHandler(MsgType.Error, OnServerErrorInternal);
         }
 
         /// <summary>
@@ -257,7 +258,6 @@ namespace Mirror
             client.RegisterHandler(MsgType.Connect, OnClientConnectInternal);
             client.RegisterHandler(MsgType.Disconnect, OnClientDisconnectInternal);
             client.RegisterHandler(MsgType.NotReady, OnClientNotReadyMessageInternal);
-            client.RegisterHandler(MsgType.Error, OnClientErrorInternal);
             client.RegisterHandler(MsgType.Scene, OnClientSceneInternal);
 
             if (playerPrefab != null)
@@ -619,14 +619,6 @@ namespace Mirror
             }
         }
 
-        internal void OnServerErrorInternal(NetworkMessage netMsg)
-        {
-            if (LogFilter.Debug) { Debug.Log("NetworkManager:OnServerErrorInternal"); }
-
-            NetworkError errorMessage = (NetworkError)netMsg;
-            OnServerError(netMsg.conn, errorMessage.exception);
-        }
-
         // ----------------------------- Client Internal Message Handlers  --------------------------------
 
         internal void OnClientConnectInternal(NetworkMessage netMsg)
@@ -662,14 +654,6 @@ namespace Mirror
             OnClientNotReady(netMsg.conn);
 
             // NOTE: s_ClientReadyConnection is not set here! don't want OnClientConnect to be invoked again after scene changes.
-        }
-
-        internal void OnClientErrorInternal(NetworkMessage netMsg)
-        {
-            if (LogFilter.Debug) { Debug.Log("NetworkManager:OnClientErrorInternal"); }
-
-            NetworkError networkError = (NetworkError)netMsg;
-            OnClientError(netMsg.conn, networkError.exception);
         }
 
         internal void OnClientSceneInternal(NetworkMessage netMsg)
