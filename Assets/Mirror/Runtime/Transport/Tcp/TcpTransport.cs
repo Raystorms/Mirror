@@ -10,9 +10,7 @@ namespace Mirror.Tcp
         protected Server server = new Server();
 
         public int port = 7777;
-        public override void SetPort(int value) {
-            throw new NotImplementedException();
-        }
+
         [Tooltip("Nagle Algorithm can be disabled by enabling NoDelay")]
         public bool NoDelay = true;
 

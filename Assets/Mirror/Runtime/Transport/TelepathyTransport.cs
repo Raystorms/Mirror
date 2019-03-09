@@ -13,10 +13,6 @@ namespace Mirror
         protected Telepathy.Client client = new Telepathy.Client();
         protected Telepathy.Server server = new Telepathy.Server();
 
-        public override void SetPort(int value) {
-            port = (ushort)value;
-        }
-
         void Awake()
         {
             // tell Telepathy to use Unity's Debug.Log
